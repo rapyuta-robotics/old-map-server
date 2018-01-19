@@ -185,9 +185,9 @@ class MapServer
                map_resp_.map.info.resolution);
       meta_data_message_ = map_resp_.map.info;
 
-      service = n.advertiseService("static_map", &MapServer::mapCallback, this);
+      service = n.advertiseService("static_map", &MapServer::getMapCallback, this);
       //pub = n.advertise<nav_msgs::MapMetaData>("map_metadata", 1,
-      set_service = n.advertiseService("set_map", &MapServer::updateMapCallback, this);
+      set_service = n.advertiseService("set_map", &MapServer::setMapCallback, this);
 
       // Latched publisher for metadata
       metadata_pub= n.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
@@ -201,7 +201,7 @@ class MapServer
   private:
 
     /** Callback invoked when someone requests our service */
-    bool mapCallback(nav_msgs::GetMap::Request  &req,
+    bool getMapCallback(nav_msgs::GetMap::Request  &req,
                      nav_msgs::GetMap::Response &res )
     {
       // request is empty; we ignore it
@@ -212,7 +212,7 @@ class MapServer
       return true;
     }
 
-    bool updateMapCallback(nav_msgs::SetMap::Request &req,
+    bool setMapCallback(nav_msgs::SetMap::Request &req,
                            nav_msgs::SetMap::Response &res )
     {
       map_resp_.map = req.map;

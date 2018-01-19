@@ -55,18 +55,17 @@ class DynamicMapGenerator
                             dynamic_map_server::SaveMap::Response &res)
     {
       name = req.name;
-      n.subscribe("map", 1, &DynamicMapGenerator::mapCallback, this);
+      n.subscribe("map", 1, &DynamicMapGenerator::saveMapCallback, this);
       res.success = true;
     }
 
-    void mapCallback(const nav_msgs::OccupancyGridConstPtr& map)
+    void saveMapCallback(const nav_msgs::OccupancyGridConstPtr& map)
     {
       ROS_INFO("Received a %d X %d map @ %.3f m/pix",
                map->info.width,
                map->info.height,
                map->info.resolution);
 
-      ROS_ERROR("Here\n");
       std::string mapdatafile = name + ".pgm";
       ROS_INFO("Writing map occupancy data to %s", mapdatafile.c_str());
       FILE* out = fopen(mapdatafile.c_str(), "w");
