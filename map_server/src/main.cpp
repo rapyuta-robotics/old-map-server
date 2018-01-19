@@ -44,6 +44,8 @@
 #include "ros/console.h"
 #include "map_server/image_loader.h"
 #include "nav_msgs/MapMetaData.h"
+#include "nav_msgs/SetMap.h"
+
 #include "yaml-cpp/yaml.h"
 
 #ifdef HAVE_YAMLCPP_GT_0_5_0
@@ -185,6 +187,7 @@ class MapServer
 
       service = n.advertiseService("static_map", &MapServer::mapCallback, this);
       //pub = n.advertise<nav_msgs::MapMetaData>("map_metadata", 1,
+      set_service = n.advertiseService("set_map", &MapServer::updateMapCallback, this);
 
       // Latched publisher for metadata
       metadata_pub= n.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
@@ -196,11 +199,6 @@ class MapServer
     }
 
   private:
-    ros::NodeHandle n;
-    ros::Publisher map_pub;
-    ros::Publisher metadata_pub;
-    ros::ServiceServer service;
-    bool deprecated;
 
     /** Callback invoked when someone requests our service */
     bool mapCallback(nav_msgs::GetMap::Request  &req,
@@ -211,9 +209,25 @@ class MapServer
       // = operator is overloaded to make deep copy (tricky!)
       res = map_resp_;
       ROS_INFO("Sending map");
-
       return true;
     }
+
+    bool updateMapCallback(nav_msgs::SetMap::Request &req,
+                           nav_msgs::SetMap::Response &res )
+    {
+      map_resp_.map = req.map;
+      map_pub.publish(map_resp_.map);
+      res.success = true;
+      return true;
+    }
+
+  private:
+    ros::NodeHandle n;
+    ros::Publisher map_pub;
+    ros::Publisher metadata_pub;
+    ros::ServiceServer service;
+    ros::ServiceServer set_service;
+    bool deprecated;
 
     /** The map data is cached here, to be sent out to service callers
      */

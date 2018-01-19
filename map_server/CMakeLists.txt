@@ -6,6 +6,7 @@ find_package(catkin REQUIRED
             roscpp
             nav_msgs
             tf2
+            message_generation
         )
 
 find_package(Bullet REQUIRED)
@@ -17,6 +18,16 @@ pkg_check_modules(YAMLCPP yaml-cpp REQUIRED)
 if(YAMLCPP_VERSION VERSION_GREATER "0.5.0")
     add_definitions(-DHAVE_YAMLCPP_GT_0_5_0)
 endif()
+
+add_service_files(
+  FILES
+  SaveMap.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 catkin_package(
     INCLUDE_DIRS

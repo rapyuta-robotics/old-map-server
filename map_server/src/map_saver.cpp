@@ -34,21 +34,29 @@
 #include "nav_msgs/GetMap.h"
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "geometry_msgs/Quaternion.h"
+#include "dynamic_map_server/SaveMap.h"
 
 using namespace std;
 
 /**
  * @brief Map generation node.
  */
-class MapGenerator
+class DynamicMapGenerator
 {
 
   public:
-    MapGenerator(const std::string& mapname) : mapname_(mapname), saved_map_(false)
+    DynamicMapGenerator()
     {
-      ros::NodeHandle n;
-      ROS_INFO("Waiting for the map");
-      map_sub_ = n.subscribe("map", 1, &MapGenerator::mapCallback, this);
+      service = n.advertiseService("save_map", &DynamicMapGenerator::mapServiceCallback, this);
+    }
+
+  private:
+    bool mapServiceCallback(dynamic_map_server::SaveMap::Request &req,
+                            dynamic_map_server::SaveMap::Response &res)
+    {
+      name = req.name;
+      n.subscribe("map", 1, &DynamicMapGenerator::mapCallback, this);
+      res.success = true;
     }
 
     void mapCallback(const nav_msgs::OccupancyGridConstPtr& map)
@@ -58,8 +66,8 @@ class MapGenerator
                map->info.height,
                map->info.resolution);
 
-
-      std::string mapdatafile = mapname_ + ".pgm";
+      ROS_ERROR("Here\n");
+      std::string mapdatafile = name + ".pgm";
       ROS_INFO("Writing map occupancy data to %s", mapdatafile.c_str());
       FILE* out = fopen(mapdatafile.c_str(), "w");
       if (!out)
@@ -86,7 +94,7 @@ class MapGenerator
       fclose(out);
 
 
-      std::string mapmetadatafile = mapname_ + ".yaml";
+      std::string mapmetadatafile = name + ".yaml";
       ROS_INFO("Writing map occupancy data to %s", mapmetadatafile.c_str());
       FILE* yaml = fopen(mapmetadatafile.c_str(), "w");
 
@@ -117,52 +125,21 @@ free_thresh: 0.196
       fclose(yaml);
 
       ROS_INFO("Done\n");
-      saved_map_ = true;
     }
 
-    std::string mapname_;
-    ros::Subscriber map_sub_;
-    bool saved_map_;
+    std::string name;
+    ros::NodeHandle n;
+    ros::ServiceServer service;
 
 };
-
-#define USAGE "Usage: \n" \
-              "  map_saver -h\n"\
-              "  map_saver [-f <mapname>] [ROS remapping args]"
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "map_saver");
-  std::string mapname = "map";
 
-  for(int i=1; i<argc; i++)
-  {
-    if(!strcmp(argv[i], "-h"))
-    {
-      puts(USAGE);
-      return 0;
-    }
-    else if(!strcmp(argv[i], "-f"))
-    {
-      if(++i < argc)
-        mapname = argv[i];
-      else
-      {
-        puts(USAGE);
-        return 1;
-      }
-    }
-    else
-    {
-      puts(USAGE);
-      return 1;
-    }
-  }
+  DynamicMapGenerator mg;
 
-  MapGenerator mg(mapname);
-
-  while(!mg.saved_map_ && ros::ok())
-    ros::spinOnce();
+  ros::spin();
 
   return 0;
 }

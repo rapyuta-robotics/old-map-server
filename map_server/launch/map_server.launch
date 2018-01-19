@@ -1,4 +1,5 @@
 <launch>
   <!-- Run the map server -->
   <node name="dynamic_map_server" pkg="dynamic_map_server" type="map_server" args="$(find dynamic_map_server)/test/testmap.yaml"/>
+  <node name="dynamic_map_saver" pkg="dynamic_map_server" type="map_saver" />
 </launch>
