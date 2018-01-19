@@ -47,19 +47,19 @@ class DynamicMapGenerator
   public:
     DynamicMapGenerator()
     {
-      service = n.advertiseService("save_map", &DynamicMapGenerator::mapServiceCallback, this);
+      service = n.advertiseService("save_map", &DynamicMapGenerator::saveMapServiceCallback, this);
     }
 
   private:
-    bool mapServiceCallback(dynamic_map_server::SaveMap::Request &req,
+    bool saveMapServiceCallback(dynamic_map_server::SaveMap::Request &req,
                             dynamic_map_server::SaveMap::Response &res)
     {
       name = req.name;
-      n.subscribe("map", 1, &DynamicMapGenerator::saveMapCallback, this);
+      n.subscribe("map", 1, &DynamicMapGenerator::saveMap, this);
       res.success = true;
     }
 
-    void saveMapCallback(const nav_msgs::OccupancyGridConstPtr& map)
+    void saveMap(const nav_msgs::OccupancyGridConstPtr& map)
     {
       ROS_INFO("Received a %d X %d map @ %.3f m/pix",
                map->info.width,
